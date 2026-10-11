@@ -1,0 +1,1 @@
+GuildProfessionsRecipes 0.5.0 (github.com/Nedyar/GuildProfessionsRecipes), commit df4abb2

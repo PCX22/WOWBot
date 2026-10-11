@@ -1,0 +1,12 @@
+.env
+.venv/
+datos/
+__pycache__/
+*.pyc
+.pytest_cache/
+sync_client/build/
+sync_client/dist/
+sync_client/*.spec
+sync_client/config.ini
+sync_client/enviados.json
+sync_client/sincronizador.log

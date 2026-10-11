@@ -1,0 +1,41 @@
+# Instancias de vanilla. Si Blizzard añade contenido a WoW Forever, se añade aquí.
+# tamano: jugadores. composicion: plazas por rol; si falta, se usa la de su tamaño.
+composiciones:
+  5:  { tanque: 1, sanador: 1, dps: 3 }
+  10: { tanque: 2, sanador: 3, dps: 5 }
+  20: { tanque: 2, sanador: 5, dps: 13 }
+  40: { tanque: 4, sanador: 10, dps: 26 }
+
+mazmorras:
+  sima_ignea:        { nombre: Sima Ígnea,                     niveles: [13, 18], tamano: 5, alias: [rfc] }
+  minas_muerte:      { nombre: Minas de la Muerte,             niveles: [17, 26], tamano: 5, alias: [dm, deadmines] }
+  cuevas_lamentos:   { nombre: Cuevas de los Lamentos,         niveles: [17, 24], tamano: 5, alias: [wc] }
+  colmillo_oscuro:   { nombre: Castillo de Colmillo Oscuro,    niveles: [22, 30], tamano: 5, alias: [sfk] }
+  brazanegra:        { nombre: Cavernas de Brazanegra,         niveles: [24, 32], tamano: 5, alias: [bfd] }
+  mazmorras_ventormenta: { nombre: Las Mazmorras,              niveles: [24, 32], tamano: 5, alias: [stockade, stocks] }
+  gnomeregan:        { nombre: Gnomeregan,                     niveles: [29, 38], tamano: 5, alias: [gnomer] }
+  horado_rajacieno:  { nombre: Horado Rajacieno,               niveles: [29, 38], tamano: 5, alias: [rfk] }
+  me_cementerio:     { nombre: Monasterio Escarlata — Cementerio, niveles: [28, 38], tamano: 5, alias: [sm, sm cementerio] }
+  me_biblioteca:     { nombre: Monasterio Escarlata — Biblioteca, niveles: [32, 42], tamano: 5, alias: [sm lib] }
+  me_armeria:        { nombre: Monasterio Escarlata — Armería, niveles: [35, 44], tamano: 5, alias: [sm arm] }
+  me_catedral:       { nombre: Monasterio Escarlata — Catedral, niveles: [38, 45], tamano: 5, alias: [sm cath] }
+  zahurda_rajacieno: { nombre: Zahúrda Rajacieno,              niveles: [37, 46], tamano: 5, alias: [rfd] }
+  uldaman:           { nombre: Uldaman,                        niveles: [41, 51], tamano: 5, alias: [ulda] }
+  zulfarrak:         { nombre: Zul'Farrak,                     niveles: [44, 54], tamano: 5, alias: [zf] }
+  maraudon:          { nombre: Maraudon,                       niveles: [46, 55], tamano: 5, alias: [mara] }
+  templo_sumergido:  { nombre: Templo de Atal'Hakkar,          niveles: [50, 56], tamano: 5, alias: [st, sunken] }
+  profundidades_roca_negra: { nombre: Profundidades de Roca Negra, niveles: [52, 60], tamano: 5, alias: [brd] }
+  cumbre_inferior:   { nombre: Cumbre de Roca Negra Inferior,  niveles: [55, 60], tamano: 5, alias: [lbrs] }
+  cumbre_superior:   { nombre: Cumbre de Roca Negra Superior,  niveles: [55, 60], tamano: 10, alias: [ubrs] }
+  la_masacre:        { nombre: La Masacre,                     niveles: [55, 60], tamano: 5, alias: [dire maul, dm este, dm oeste, dm norte] }
+  scholomance:       { nombre: Scholomance,                    niveles: [58, 60], tamano: 5, alias: [scholo] }
+  stratholme:        { nombre: Stratholme,                     niveles: [58, 60], tamano: 5, alias: [strat] }
+
+raids:
+  nucleo_magma:      { nombre: Núcleo de Magma,       niveles: [60, 60], tamano: 40, alias: [mc, molten core] }
+  onyxia:            { nombre: Guarida de Onyxia,     niveles: [60, 60], tamano: 40, alias: [ony] }
+  guarida_alanegra:  { nombre: Guarida Alanegra,      niveles: [60, 60], tamano: 40, alias: [bwl] }
+  zulgurub:          { nombre: Zul'Gurub,             niveles: [60, 60], tamano: 20, alias: [zg] }
+  ruinas_ahnqiraj:   { nombre: Ruinas de Ahn'Qiraj,   niveles: [60, 60], tamano: 20, alias: [aq20] }
+  templo_ahnqiraj:   { nombre: Templo de Ahn'Qiraj,   niveles: [60, 60], tamano: 40, alias: [aq40] }
+  naxxramas:         { nombre: Naxxramas,             niveles: [60, 60], tamano: 40, alias: [naxx] }

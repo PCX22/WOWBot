@@ -1,0 +1,14 @@
+# Profesiones de vanilla. skill_line: el ID que usan los addons (GuildRecipesDB lo guarda así).
+# principal: cuenta para el límite de dos profesiones principales por personaje.
+alquimia:       { nombre: Alquimia,           skill_line: 171, principal: true }
+herreria:       { nombre: Herrería,           skill_line: 164, principal: true }
+encantamiento:  { nombre: Encantamiento,      skill_line: 333, principal: true }
+ingenieria:     { nombre: Ingeniería,         skill_line: 202, principal: true }
+herboristeria:  { nombre: Herboristería,      skill_line: 182, principal: true }
+peleteria:      { nombre: Peletería,          skill_line: 165, principal: true }
+mineria:        { nombre: Minería,            skill_line: 186, principal: true }
+desuello:       { nombre: Desuello,           skill_line: 393, principal: true }
+sastreria:      { nombre: Sastrería,          skill_line: 197, principal: true }
+cocina:         { nombre: Cocina,             skill_line: 185, principal: false }
+primeros_auxilios: { nombre: Primeros auxilios, skill_line: 129, principal: false }
+pesca:          { nombre: Pesca,              skill_line: 356, principal: false }

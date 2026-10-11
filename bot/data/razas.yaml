@@ -1,0 +1,33 @@
+# Razas de WoW Forever (vanilla) y las clases que puede elegir cada una.
+humano:
+  nombre: Humano
+  faccion: alianza
+  clases: [guerrero, paladin, picaro, sacerdote, mago, brujo]
+enano:
+  nombre: Enano
+  faccion: alianza
+  clases: [guerrero, paladin, cazador, picaro, sacerdote]
+elfo_noche:
+  nombre: Elfo de la noche
+  faccion: alianza
+  clases: [guerrero, cazador, picaro, sacerdote, druida]
+gnomo:
+  nombre: Gnomo
+  faccion: alianza
+  clases: [guerrero, picaro, mago, brujo]
+orco:
+  nombre: Orco
+  faccion: horda
+  clases: [guerrero, cazador, picaro, chaman, brujo]
+no_muerto:
+  nombre: No-muerto
+  faccion: horda
+  clases: [guerrero, picaro, sacerdote, mago, brujo]
+tauren:
+  nombre: Tauren
+  faccion: horda
+  clases: [guerrero, cazador, chaman, druida]
+trol:
+  nombre: Trol
+  faccion: horda
+  clases: [guerrero, cazador, picaro, sacerdote, chaman, mago]

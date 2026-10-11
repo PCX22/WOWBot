@@ -1,0 +1,47 @@
+# Clases de WoW Forever (vanilla). roles: lo que la clase puede hacer en grupo.
+# color: el color de clase del juego, se usa para los roles de Discord.
+guerrero:
+  nombre: Guerrero
+  color: "#C69B6D"
+  roles: [tanque, dps]
+  specs: [Armas, Furia, Protección]
+paladin:
+  nombre: Paladín
+  color: "#F48CBA"
+  roles: [sanador, tanque, dps]
+  specs: [Sagrado, Protección, Reprensión]
+cazador:
+  nombre: Cazador
+  color: "#AAD372"
+  roles: [dps]
+  specs: [Dominio de bestias, Puntería, Supervivencia]
+picaro:
+  nombre: Pícaro
+  color: "#FFF468"
+  roles: [dps]
+  specs: [Asesinato, Combate, Sutileza]
+sacerdote:
+  nombre: Sacerdote
+  color: "#FFFFFF"
+  roles: [sanador, dps]
+  specs: [Disciplina, Sagrado, Sombra]
+chaman:
+  nombre: Chamán
+  color: "#0070DD"
+  roles: [sanador, dps]
+  specs: [Elemental, Mejora, Restauración]
+mago:
+  nombre: Mago
+  color: "#3FC7EB"
+  roles: [dps]
+  specs: [Arcano, Fuego, Escarcha]
+brujo:
+  nombre: Brujo
+  color: "#8788EE"
+  roles: [dps]
+  specs: [Aflicción, Demonología, Destrucción]
+druida:
+  nombre: Druida
+  color: "#FF7C0A"
+  roles: [tanque, sanador, dps]
+  specs: [Equilibrio, Combate feral, Restauración]
