@@ -1,4 +1,4 @@
-"""Cliente de la API de la web para el bot (/api/bot/*): los grupos se guardan en la web.
+"""Cliente de la API de la web para el bot (/api/bot/*): lee de ella los miembros y guarda en ella los grupos.
 
 El bot dice siempre qué usuario de Discord está actuando; la web comprueba qué puede hacer (miembro, líder del
 grupo, oficial). Sin usuario (el bot por su cuenta) solo se puede guardar el mensaje de Discord, marcar el
@@ -150,6 +150,12 @@ class WebApi:
                     raise WebApiError("La web de la hermandad no responde ahora mismo. Prueba en un momento.") from None
                 await asyncio.sleep(delay)
         raise AssertionError("unreachable")
+
+    # Miembros -----------------------------------------------------------------
+
+    async def list_members(self) -> dict:
+        """Miembros, rangos y personajes (para web.Directory)."""
+        return await self._call("GET", "/api/bot/members")
 
     # Grupos -------------------------------------------------------------------
 

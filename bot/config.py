@@ -37,7 +37,6 @@ class Config:
     officer_roles: tuple[str, ...]
     raid_creator_roles: tuple[str, ...]
     wow_guild_name: str | None
-    web_database_url: str
     web_guild_slug: str | None
     web_url: str | None
     web_refresh_seconds: int
@@ -55,7 +54,7 @@ class Config:
 
     @property
     def local_mode(self) -> bool:
-        return not (self.web_database_url and self.web_api_token)
+        return not (self.web_api_url and self.web_api_token)
 
     @classmethod
     def load(cls) -> "Config":
@@ -63,8 +62,8 @@ class Config:
         token = os.getenv("DISCORD_TOKEN", "").strip()
         if not token:
             raise SystemExit("Falta DISCORD_TOKEN en el archivo .env (copia .env.example a .env y rellénalo)")
-        # Sin los dos datos de la web, el bot funciona en modo local (bot/local.py): guarda él los personajes y grupos.
-        web_database_url = os.getenv("WEB_DATABASE_URL", "").strip()
+        # Sin la dirección y la clave de la web, el bot funciona en modo local (bot/local.py): guarda él los personajes
+        # y los grupos.
         web_api_token = os.getenv("WEB_API_TOKEN", "").strip()
         data_dir = Path(os.getenv("DATA_DIR", str(ROOT / "datos")))
         return cls(
@@ -79,7 +78,6 @@ class Config:
             officer_roles=parse_roles(os.getenv("ROLES_OFICIAL", "")),
             raid_creator_roles=parse_roles(os.getenv("PERMISO_CREAR_RAID", "")),
             wow_guild_name=os.getenv("WOW_GUILD_NAME", "").strip() or None,
-            web_database_url=web_database_url,
             web_guild_slug=os.getenv("WEB_GUILD_SLUG", "").strip() or None,
             web_url=os.getenv("WEB_URL", "").strip().rstrip("/") or None,
             web_refresh_seconds=_int("WEB_REFRESCO_SEGUNDOS", 60),

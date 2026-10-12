@@ -135,6 +135,19 @@ async def refresh_message(bot, group: Group) -> None:
         log.warning("No pude actualizar el grupo %s: %s", group.id, e)
 
 
+async def delete_message(bot, group: Group) -> None:
+    """Borra el mensaje del grupo del canal."""
+    channel = bot.get_channel(group.channel_id) if group.channel_id else None
+    if channel is None or not group.message_id:
+        return
+    try:
+        await channel.get_partial_message(group.message_id).delete()
+    except discord.NotFound:
+        pass
+    except discord.HTTPException as e:
+        log.warning("No pude borrar el mensaje del grupo %s: %s", group.id, e)
+
+
 def due(groups: list[Group], now: datetime, reminder_minutes: int) -> tuple[list[Group], list[Group]]:
     """(grupos a los que toca avisar, grupos que ya han terminado)."""
     remind_at = now + timedelta(minutes=reminder_minutes)
@@ -213,6 +226,13 @@ class GroupButton(discord.ui.DynamicItem[discord.ui.Button], template=rf"grp:(?P
         await interaction.response.defer(ephemeral=True, thinking=True)
         try:
             if self.action == "leave":
+                group = await bot.web_api.get_group(self.group_id)
+                if group.kind == "lfg" and group.leader_id == interaction.user.id:
+                    # Sin quien lo abrió el aviso ya no tiene sentido: se cancela y se borra el mensaje.
+                    group = await bot.web_api.update_group(self.group_id, interaction.user.id, status="cancelado")
+                    await delete_message(bot, group)
+                    await interaction.followup.send("Te has salido y he quitado tu aviso.", ephemeral=True)
+                    return
                 group = await bot.web_api.remove(self.group_id, interaction.user.id)
                 text = "Te has desapuntado."
             else:

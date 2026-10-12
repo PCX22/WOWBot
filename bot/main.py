@@ -13,7 +13,7 @@ from .gamedata import DATA_DIR
 from .importers.merge import save_recipe_names
 from .models import RecipeName
 from .permisos import is_officer
-from .web import Directory, WebUnavailable, make_web_engine
+from .web import Directory, WebUnavailable
 from .local import LocalDirectory, LocalGroupsApi
 from .web_api import WebApi
 
@@ -45,17 +45,15 @@ class GuildBot(commands.Bot):
             await self._load_cogs([*COGS, "registro"])
             await self._sync_commands()
             return
-        self.directory = Directory(
-            make_web_engine(self.config.web_database_url), self.config.web_guild_slug, self.config.web_refresh_seconds
-        )
-        guild_slug = self.config.web_guild_slug
+        if not self.config.web_guild_slug:
+            raise SystemExit("Falta WEB_GUILD_SLUG en el .env: el subdominio (slug) de la hermandad en la web")
+        self.web_api = WebApi(self.config.web_api_url, self.config.web_api_token, self.config.web_guild_slug)
+        self.directory = Directory(self.web_api.list_members, self.config.web_refresh_seconds)
         try:
             snapshot = await self.directory.snapshot()
-            guild_slug = guild_slug or snapshot.guild_slug
             log.info("Web: hermandad «%s», %d personajes", snapshot.guild_name, len(snapshot.characters))
         except WebUnavailable as e:
             log.error("No puedo leer la web todavía (%s). El bot arranca y lo reintentará.", e)
-        self.web_api = WebApi(self.config.web_api_url, self.config.web_api_token, guild_slug)
         await self._load_recipe_names()
         await self._load_cogs(COGS)
         await self._sync_commands()

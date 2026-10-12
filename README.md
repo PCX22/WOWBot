@@ -5,7 +5,7 @@ La **web de la hermandad** (nuestro fork de Guildbook) es el centro de todo. Est
 ```
 addon Guild Professions & Recipes ──(.lua)──> sincronizador.exe (un oficial) ──/api/addon──> WEB
                                                                                           │   ▲
-                                                           personajes (solo lectura)      │   │ grupos (/api/bot)
+                                                   miembros (/api/bot/members)    │   │ grupos (/api/bot/groups)
                                                                                           ▼   │
                                                                           bot de Discord ──> Discord
 ```
@@ -16,15 +16,18 @@ addon Guild Professions & Recipes ──(.lua)──> sincronizador.exe (un ofic
   - **Guarda en la web** los grupos (raids, mazmorras, `/lfg`) y quién se apunta.
   - Pone los **roles de Discord**.
 
+  Solo habla con la API de la web, con una clave; no tiene acceso a su base de datos.
+
 ## La web: lo que hemos añadido al fork
-En la rama `feat/sincronizador-addon` de `F:\Proyectos Personales\guildbook`:
+Los grupos y la API del bot ya están en `main` (PR #9 y #10). El sincronizador está en el PR #11
+(`feat/sincronizador-addon`), pendiente de publicar.
 
 | Qué | Dónde |
 |---|---|
 | Claves del sincronizador (solo oficiales), informe de cada envío y los personajes que no están en la web | Administración → Más → *Sincronizador del addon* |
 | API del sincronizador: `GET /api/addon/me`, `POST /api/addon/professions` | `src/server/addon-sync-api.ts`, `src/server/services/addon-sync.ts` |
 | Grupos: tablas `group_events` y `group_signups`, y página *Grupos* en el área de miembros | `src/server/services/groups.ts`, `src/app/[guild]/members/groups/` |
-| API del bot: `/api/bot/groups…`, con `Authorization: Bearer $BOT_API_TOKEN` | `src/server/bot-api.ts` |
+| API del bot: `/api/bot/members` y `/api/bot/groups…`, con `Authorization: Bearer $BOT_API_TOKEN` | `src/server/bot-api.ts`, `src/server/services/bot-members.ts` |
 | Hasta 5 profesiones por personaje (2 principales + cocina, primeros auxilios y pesca) | `src/lib/validation.ts` |
 
 **Variables nuevas en la web** (en `.env.example` y en el README del fork):
@@ -76,28 +79,22 @@ En la rama `feat/sincronizador-addon` de `F:\Proyectos Personales\guildbook`:
    `https://discord.com/oauth2/authorize?client_id=TU_CLIENT_ID&scope=bot+applications.commands&permissions=268520448`
 4. Sube el rol del bot **por encima** de los roles de clase y profesión.
 
-### 3. Usuario de solo lectura en la base de datos de la web
-[web_solo_lectura.sql](web_solo_lectura.sql) crea el usuario `bot_hermandad`, que solo puede leer las columnas que usa el bot. Cambia antes la contraseña y, si hace falta, el nombre de la base de datos.
-
-```bash
-podman exec -i <contenedor-postgres> psql -U <admin> -d osm < web_solo_lectura.sql
-```
-
-### 4. Configurar y arrancar el bot
+### 3. Configurar y arrancar el bot
 Copia `.env.example` a `.env` y rellénalo. Sobre todo:
 - `DISCORD_TOKEN` y `GUILD_ID`;
-- `WEB_DATABASE_URL`, con el usuario de solo lectura;
-- `WEB_API_TOKEN`, igual que el `BOT_API_TOKEN` de la web;
-- `WEB_URL`.
+- `WEB_URL` y `WEB_GUILD_SLUG`;
+- `WEB_API_TOKEN`, igual que el `BOT_API_TOKEN` de la web.
 
-Luego arráncalo:
+Sin `WEB_URL` o `WEB_API_TOKEN`, el bot funciona en **modo local**: guarda él los personajes (`/registro`) y los grupos.
+
+En una Raspberry Pi, ver [raspberry/LEEME.md](raspberry/LEEME.md). En un servidor con Podman:
 
 ```bash
 podman build -t bot-hermandad .
 podman run -d --name bot-hermandad --env-file .env -v bot-hermandad-datos:/data --restart unless-stopped bot-hermandad
 ```
 
-### 5. El sincronizador (en el PC de un oficial)
+### 4. El sincronizador (en el PC de un oficial)
 1. **Generar el .exe:** `sync_client\crear_exe.bat` crea `sync_client\dist\sincronizador.exe`. Súbelo donde quieras y pon el enlace en `ADDON_SYNC_DOWNLOAD_URL`.
 2. **Clave:** el oficial la crea en la web, en Administración → Más → *Sincronizador del addon*.
 3. **Primera vez:** abre el .exe y pega la dirección de la web y la clave. El programa busca solo la carpeta del juego y pregunta si debe **arrancar solo con Windows, sin ventana**.
@@ -122,8 +119,8 @@ python -m venv .venv
 ```
 
 - **Tests:**
-  - `tests/test_web.py`: lectura de la web, sobre una copia en SQLite de sus tablas.
-  - `tests/test_web_api.py`: la API de grupos, contra un servidor de pruebas que imita a la web.
+  - `tests/test_web.py`: lectura de los miembros de la web, con respuestas como las de `/api/bot/members`.
+  - `tests/test_web_api.py`: la API del bot (miembros y grupos), contra un servidor de pruebas que imita a la web.
   - `tests/test_sincronizador.py`: el lector del addon, contrastado con su `Pack.lua` real ejecutado en Lua, y el envío.
 - **Datos del juego** (clases, razas, profesiones, instancias): en `bot/data/*.yaml`.
 - **Referencia del addon:** `addon_ref/` (`Pack.lua`, `Data.lua` y la versión).

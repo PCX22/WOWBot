@@ -3,8 +3,8 @@
 LocalDirectory hace de bot/web.py (Directory) y LocalGroupsApi de bot/web_api.py (WebApi): los mismos métodos y
 los mismos objetos, para que los comandos funcionen igual en los dos modos. Las reglas son las de la web
 (src/server/services/groups.ts del fork): solo con un personaje propio, con un rol que su clase pueda llevar, y
-gestionar solo el líder o un oficial. Cuando llegue la web se pone WEB_DATABASE_URL y WEB_API_TOKEN en el .env y
-el bot deja de usar esto.
+gestionar solo el líder o un oficial. Cuando llegue la web se ponen WEB_URL, WEB_API_TOKEN y WEB_GUILD_SLUG en el
+.env y el bot deja de usar esto.
 """
 from __future__ import annotations
 

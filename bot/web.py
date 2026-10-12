@@ -1,18 +1,17 @@
-"""La web de la hermandad (fork de Guildbook) manda en miembros y personajes; el bot la lee en solo lectura.
+"""La web de la hermandad (fork de Guildbook) manda en miembros y personajes; el bot los lee de su API.
 
-Las consultas solo usan las columnas que necesita el bot (ver README: permisos del usuario de Postgres) y SQL
-estándar. Se lee todo de una vez y se guarda en memoria unos segundos: una hermandad son unos cientos de filas,
-y así los autocompletados no consultan la base de datos en cada tecla.
+/api/bot/members (src/server/services/bot-members.ts en la web) da los miembros activos que han entrado con Discord,
+el nivel de su rango y sus personajes con sus profesiones. Se lee todo de una vez y se guarda en memoria unos
+segundos: una hermandad son unos cientos de personajes, y así los autocompletados no preguntan a la web en cada tecla.
+El bot no tiene acceso a la base de datos de la web.
 """
 from __future__ import annotations
 
 import asyncio
 import logging
 import time
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
-
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
 from .gamedata import GAME, ROLE_EMOJI, ROLES, normalize
 
@@ -41,23 +40,6 @@ SPEC_LABELS = {
     "Destruction": "Destrucción", "Balance": "Equilibrio", "Feral": "Feral",
 }
 OFFICER_TIERS = ("officer", "admin")
-
-GUILD_SQL = "SELECT id, name, slug, timezone FROM guilds"
-MEMBERS_SQL = """
-SELECT u.discord_id, r.tier
-FROM memberships m
-JOIN users u ON u.id = m.user_id
-JOIN ranks r ON r.id = m.rank_id AND r.guild_id = m.guild_id
-WHERE m.guild_id = :guild_id AND m.status = 'active' AND u.discord_id IS NOT NULL
-"""
-CHARACTERS_SQL = """
-SELECT c.id, c.name, c.surname, c.class, c.spec, c.role, c.level, c.is_main, c.verified, u.discord_id
-FROM characters c
-JOIN memberships m ON m.id = c.membership_id AND m.guild_id = c.guild_id
-JOIN users u ON u.id = m.user_id
-WHERE c.guild_id = :guild_id AND c.archived_at IS NULL AND m.status = 'active'
-"""
-PROFESSIONS_SQL = "SELECT character_id, profession, skill FROM character_professions WHERE guild_id = :guild_id"
 
 
 class WebUnavailable(RuntimeError):
@@ -167,69 +149,56 @@ def _discord_id(value) -> int | None:
         return None
 
 
-def build_snapshot(guild_row, member_rows, character_rows, profession_rows) -> Snapshot:
-    professions: dict[str, list[WebProfession]] = {}
-    for character_id, profession, skill in profession_rows:
-        key = PROFESSION_FROM_WEB.get(str(profession))
-        if key:
-            professions.setdefault(str(character_id), []).append(WebProfession(key, skill))
-    characters = [
-        WebCharacter(
-            id=str(cid),
-            name=name,
-            surname=surname or "",
-            class_key=CLASS_FROM_WEB.get(str(wow_class)),
-            spec=spec or "",
-            web_role=str(role),
-            level=int(level),
-            is_main=bool(is_main),
-            verified=bool(verified),
-            discord_id=_discord_id(discord_id),
-            professions=tuple(sorted(professions.get(str(cid), []), key=lambda p: -(p.skill or 0))),
-        )
-        for cid, name, surname, wow_class, spec, role, level, is_main, verified, discord_id in character_rows
-    ]
-    tiers = {d: str(tier) for discord_id, tier in member_rows if (d := _discord_id(discord_id)) is not None}
+def _professions(rows) -> tuple[WebProfession, ...]:
+    found = [WebProfession(key, p.get("skill")) for p in rows or () if (key := PROFESSION_FROM_WEB.get(str(p.get("profession"))))]
+    return tuple(sorted(found, key=lambda p: -(p.skill or 0)))
+
+
+def build_snapshot(data: dict) -> Snapshot:
+    """La respuesta de /api/bot/members: {guild: {slug, name, timezone}, members: [{discordId, tier, characters}]}."""
+    guild = data.get("guild") or {}
+    characters, tiers = [], {}
+    for member in data.get("members") or ():
+        discord_id = _discord_id(member.get("discordId"))
+        if discord_id is None:
+            continue
+        tiers[discord_id] = str(member.get("tier") or "")
+        for c in member.get("characters") or ():
+            characters.append(
+                WebCharacter(
+                    id=str(c["id"]),
+                    name=c["name"],
+                    surname=c.get("surname") or "",
+                    class_key=CLASS_FROM_WEB.get(str(c.get("class"))),
+                    spec=c.get("spec") or "",
+                    web_role=str(c.get("role")),
+                    level=int(c.get("level") or 0),
+                    is_main=bool(c.get("isMain")),
+                    verified=bool(c.get("verified")),
+                    discord_id=discord_id,
+                    professions=_professions(c.get("professions")),
+                )
+            )
     return Snapshot(
-        guild_name=guild_row[1], guild_slug=guild_row[2], characters=characters, tiers=tiers, loaded_at=time.monotonic()
+        guild_name=guild.get("name") or "", guild_slug=guild.get("slug") or "", characters=characters, tiers=tiers,
+        loaded_at=time.monotonic(),
     )
 
 
-def make_web_engine(url: str) -> AsyncEngine:
-    if url.startswith("postgres://"):
-        url = "postgresql+asyncpg://" + url.removeprefix("postgres://")
-    elif url.startswith("postgresql://"):
-        url = "postgresql+asyncpg://" + url.removeprefix("postgresql://")
-    return create_async_engine(url, pool_pre_ping=True, pool_size=2, max_overflow=2)
-
-
 class Directory:
-    """Lo que la web sabe de la hermandad, con una copia en memoria que se renueva cada `max_age` segundos."""
+    """Lo que la web sabe de la hermandad, con una copia en memoria que se renueva cada `max_age` segundos.
 
-    def __init__(self, engine: AsyncEngine, guild_slug: str | None, max_age: float = 60) -> None:
-        self.engine = engine
-        self.guild_slug = guild_slug
+    `fetch` pide /api/bot/members a la web (WebApi.list_members).
+    """
+
+    def __init__(self, fetch: Callable[[], Awaitable[dict]], max_age: float = 60) -> None:
+        self.fetch = fetch
         self.max_age = max_age
         self._snapshot: Snapshot | None = None
         self._lock = asyncio.Lock()
 
     async def _load(self) -> Snapshot:
-        async with self.engine.connect() as conn:
-            guilds = (await conn.execute(text(GUILD_SQL))).all()
-            if self.guild_slug:
-                guilds = [g for g in guilds if g[2] == self.guild_slug]
-            if len(guilds) != 1:
-                raise WebUnavailable(
-                    f"No encuentro la hermandad «{self.guild_slug}» en la web."
-                    if self.guild_slug
-                    else f"La web tiene {len(guilds)} hermandades: pon WEB_GUILD_SLUG en el .env."
-                )
-            guild = guilds[0]
-            params = {"guild_id": guild[0]}
-            members = (await conn.execute(text(MEMBERS_SQL), params)).all()
-            characters = (await conn.execute(text(CHARACTERS_SQL), params)).all()
-            professions = (await conn.execute(text(PROFESSIONS_SQL), params)).all()
-        return build_snapshot(guild, members, characters, professions)
+        return build_snapshot(await self.fetch())
 
     async def snapshot(self, fresh: bool = False) -> Snapshot:
         current = self._snapshot

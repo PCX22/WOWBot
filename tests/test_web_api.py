@@ -6,6 +6,7 @@ import pytest
 from aiohttp import web
 
 from bot.cogs.grupos import due, render, sign_up
+from bot.web import Directory
 from bot.web_api import Group, WebApi, WebApiError
 
 T0 = datetime(2026, 11, 6, 19, 0, tzinfo=timezone.utc)
@@ -60,7 +61,17 @@ class FakeWeb:
         app.router.add_route("*", "/api/bot/groups", self.groups)
         app.router.add_route("*", "/api/bot/groups/{id}", self.one)
         app.router.add_route("*", "/api/bot/groups/{id}/signups", self.signups)
+        app.router.add_get("/api/bot/members", self.members)
         return app
+
+    async def members(self, request):
+        body = await self._body(request)
+        member = {"discordId": "100000000000000001", "tier": "officer", "characters": [{
+            "id": "c1", "name": "Tor", "surname": "Whitecross", "fullName": "Tor Whitecross", "class": "warrior",
+            "spec": "Protection", "role": "tank", "level": 60, "isMain": True, "verified": True,
+            "professions": [{"profession": "mining", "skill": 300}],
+        }]}
+        return web.json_response({"guild": {"slug": body["guild"], "name": "OSM", "timezone": "Europe/Madrid"}, "members": [member]})
 
     async def _body(self, request):
         if request.headers.get("Authorization") != "Bearer secreto":
@@ -155,6 +166,16 @@ async def test_api_round_trip(fake):
     assert [g.id for g in await api.list_groups()] == [created.id]
     left = await api.remove(created.id, 200)
     assert left.signups == []
+
+
+async def test_members_through_the_api(fake):
+    web_fake, api = fake
+    snapshot = await Directory(api.list_members).snapshot()
+    method, path, body = web_fake.requests[-1]
+    assert (method, path, body) == ("GET", "/api/bot/members", {"guild": "osm"})  # el slug va en la dirección
+    tor = snapshot.find("Tor Whitecross")
+    assert (tor.class_key, tor.role, tor.discord_id, [p.name for p in tor.professions]) == ("guerrero", "tanque", 100000000000000001, ["Minería"])
+    assert snapshot.is_officer(100000000000000001)
 
 
 async def test_api_errors_are_shown_as_is(fake):
